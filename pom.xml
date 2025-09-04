@@ -65,6 +65,7 @@
         <main.basedir>${project.basedir}</main.basedir>
         <!-- Temporary until upgrade to 2.x -->
         <swagger.version>1.6.2</swagger.version>
+        <sonar.organization>vnsaba</sonar.organization>
     </properties>
     <dependencyManagement>
         <dependencies>
