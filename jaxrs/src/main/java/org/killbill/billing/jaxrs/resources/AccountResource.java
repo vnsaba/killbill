@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -1517,6 +1518,63 @@ public class AccountResource extends JaxRsResourceBase {
         }
         return Response.status(Status.NO_CONTENT).build();
     }
+
+
+    @TimedResource
+@GET
+@Path("/search/advanced")
+@Produces(APPLICATION_JSON)
+@ApiOperation(value = "Advanced search for accounts by tags and other criteria", response = AccountJson.class, responseContainer = "List")
+public Response searchAccountsAdvanced(
+        @QueryParam("tags") List<String> tags,
+        @QueryParam("minBalance") BigDecimal minBalance,
+        @QueryParam("maxBalance") BigDecimal maxBalance,
+        @QueryParam("currency") String currency,
+        @QueryParam("country") String country,
+        @QueryParam("offset") @DefaultValue("0") Long offset,
+        @QueryParam("limit") @DefaultValue("100") Long limit,
+        @javax.ws.rs.core.Context HttpServletRequest request
+) {
+    final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+    final Pagination<Account> accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
+
+    List<AccountJson> result = new ArrayList<>();
+    for (Account account : accounts) {
+        boolean matches = true;
+        if (currency != null && !currency.isEmpty()) {
+            matches &= currency.equalsIgnoreCase(account.getCurrency() != null ? account.getCurrency().name() : null);
+        }
+        if (country != null && !country.isEmpty()) {
+            matches &= country.equalsIgnoreCase(account.getCountry());
+        }
+        if (minBalance != null || maxBalance != null) {
+            BigDecimal balance = invoiceApi.getAccountBalance(account.getId(), tenantContext);
+            if (minBalance != null) {
+                matches &= balance.compareTo(minBalance) >= 0;
+            }
+            if (maxBalance != null) {
+                matches &= balance.compareTo(maxBalance) <= 0;
+            }
+        }
+        if (tags != null && !tags.isEmpty()) {
+            List<Tag> accountTags = tagUserApi.getTagsForAccount(account.getId(), false, tenantContext);
+            if (accountTags == null) {
+                accountTags = Collections.emptyList();
+            }
+            Set<String> tagIds = new HashSet<>();
+            for (Tag tag : accountTags) {
+                if (tag != null && tag.getTagDefinitionId() != null) {
+                    tagIds.add(tag.getTagDefinitionId().toString());
+                }
+            }
+            matches &= tags.stream().allMatch(tagIds::contains);
+        }
+        if (matches) {
+            result.add(new AccountJson(account, invoiceApi.getAccountBalance(account.getId(), tenantContext), null, null));
+        }
+    }
+    return Response.status(Response.Status.OK).entity(result).build();
+}
 
     @TimedResource
     @GET
