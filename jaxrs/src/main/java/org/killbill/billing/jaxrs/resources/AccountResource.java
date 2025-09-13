@@ -5,13 +5,13 @@
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
+ * License. You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
@@ -236,17 +236,19 @@ public class AccountResource extends JaxRsResourceBase {
                                                     "getAccounts",
                                                     accounts.getNextOffset(),
                                                     limit,
-                                                    Map.of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
-                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
-                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of(QUERY_ACCOUNT_WITH_BALANCE,
+                                                           accountWithBalance.toString(),
+                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA,
+                                                           accountWithBalanceAndCBA.toString(),
+                                                           QUERY_AUDIT,
+                                                           auditMode.getLevel().toString()),
                                                     Collections.emptyMap());
         return buildStreamingPaginationResponse(accounts,
                                                 account -> {
                                                     final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
                                                     return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
                                                 },
-                                                nextPageUri
-                                               );
+                                                nextPageUri);
     }
 
     @TimedResource
@@ -268,84 +270,19 @@ public class AccountResource extends JaxRsResourceBase {
                                                     "searchAccounts",
                                                     accounts.getNextOffset(),
                                                     limit,
-                                                    Map.of(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString(),
-                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString(),
-                                                           QUERY_AUDIT, auditMode.getLevel().toString()),
+                                                    Map.of(QUERY_ACCOUNT_WITH_BALANCE,
+                                                           accountWithBalance.toString(),
+                                                           QUERY_ACCOUNT_WITH_BALANCE_AND_CBA,
+                                                           accountWithBalanceAndCBA.toString(),
+                                                           QUERY_AUDIT,
+                                                           auditMode.getLevel().toString()),
                                                     Map.of("searchKey", searchKey));
         return buildStreamingPaginationResponse(accounts,
                                                 account -> {
                                                     final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
                                                     return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
                                                 },
-                                                nextPageUri
-                                               );
-    }
-
-
-    @TimedResource
-    @GET
-    @Path("/search/advanced")
-    @Produces(APPLICATION_JSON)
-    @ApiOperation(value = "Advanced search for accounts by tags and other criteria", response = AccountJson.class, responseContainer = "List")
-    public Response searchAccountsAdvanced(
-        @QueryParam("tag") String tag,
-        @QueryParam("currency") String currency,
-        @QueryParam("country") String country,
-        @QueryParam("city") String city,
-        @QueryParam("state") String state,
-        @QueryParam("offset") @DefaultValue("0") Long offset,
-        @QueryParam("limit") @DefaultValue("100") Long limit,
-        @javax.ws.rs.core.Context HttpServletRequest request) {
-        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
-        final Pagination < Account > accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
-
-        List < AccountJson > result = new ArrayList < > ();
-
-        for (Account account: accounts) {
-            boolean matches = true;
-
-            if (currency != null && !currency.isEmpty()) {
-                matches &= currency.equalsIgnoreCase(account.getCurrency() != null ? account.getCurrency().name() : null);
-            }
-            
-            if (country != null && !country.isEmpty()) {
-                matches &= country.equalsIgnoreCase(account.getCountry());
-            }
-
-            if (city != null && !city.isEmpty()) {
-                matches &= city.equalsIgnoreCase(account.getCity());
-            }
-
-            if (state != null && !state.isEmpty()) {
-                matches &= state.equalsIgnoreCase(account.getStateOrProvince());
-            }
-
-            if (tag != null && !tag.isEmpty()) {
-                List < Tag > accountTags = tagUserApi.getTagsForAccount(account.getId(), false, tenantContext);
-
-                if (accountTags == null) {
-                    accountTags = Collections.emptyList();
-                }
-
-                boolean hasTag = accountTags.stream().anyMatch(t -> {
-                    try {
-                        TagDefinition def = tagUserApi.getTagDefinition(t.getTagDefinitionId(), tenantContext);
-                        return def != null && def.getName().equalsIgnoreCase(tag);
-                    } catch (Exception e) {
-                        log.warn("Could not fetch tag definition for ", t, e);
-                        return false;
-                    }
-                });
-
-                matches &= hasTag;
-            }
-
-            if (matches) {
-                result.add(new AccountJson(account, invoiceApi.getAccountBalance(account.getId(), tenantContext), null, null));
-            }
-        }
-
-        return Response.status(Response.Status.OK).entity(result).build();
+                                                nextPageUri);
     }
 
     @TimedResource
@@ -364,9 +301,8 @@ public class AccountResource extends JaxRsResourceBase {
 
         final Account account = accountUserApi.getAccountById(accountId, tenantContext);
 
-        final List<SubscriptionBundle> bundles = (externalKey != null) ?
-                                                 subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(accountId, externalKey, tenantContext) :
-                                                 subscriptionApi.getSubscriptionBundlesForAccountId(accountId, tenantContext);
+        final List<SubscriptionBundle> bundles = (externalKey != null) ? subscriptionApi.getSubscriptionBundlesForAccountIdAndExternalKey(accountId, externalKey, tenantContext)
+            : subscriptionApi.getSubscriptionBundlesForAccountId(accountId, tenantContext);
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
 
@@ -417,8 +353,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                         throw new RuntimeException(e);
                                                     }
                                                 },
-                                                nextPageUri
-                                               );
+                                                nextPageUri);
 
     }
 
@@ -449,8 +384,11 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(accountJson).build();
     }
 
-    private AccountJson getAccount(final Account account, final Boolean accountWithBalance, final Boolean accountWithBalanceAndCBA,
-                                   final AccountAuditLogs auditLogs, final TenantContext tenantContext) {
+    private AccountJson getAccount(final Account account,
+                                   final Boolean accountWithBalance,
+                                   final Boolean accountWithBalanceAndCBA,
+                                   final AccountAuditLogs auditLogs,
+                                   final TenantContext tenantContext) {
         if (accountWithBalanceAndCBA) {
             final BigDecimal accountBalance = invoiceApi.getAccountBalance(account.getId(), tenantContext);
             final BigDecimal accountCBA = invoiceApi.getAccountCBA(account.getId(), tenantContext);
@@ -524,7 +462,11 @@ public class AccountResource extends JaxRsResourceBase {
                                  @HeaderParam(HDR_CREATED_BY) final String createdBy,
                                  @HeaderParam(HDR_REASON) final String reason,
                                  @HeaderParam(HDR_COMMENT) final String comment,
-                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException, AccountApiException, EntitlementApiException, InvoiceApiException, TagApiException {
+                                 @javax.ws.rs.core.Context final HttpServletRequest request) throws SubscriptionApiException,
+                                                                                             AccountApiException,
+                                                                                             EntitlementApiException,
+                                                                                             InvoiceApiException,
+                                                                                             TagApiException {
 
         final CallContext callContext = context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request);
         tagUserApi.addTag(accountId, ObjectType.ACCOUNT, ControlTagType.AUTO_INVOICING_OFF.getId(), callContext);
@@ -532,18 +474,19 @@ public class AccountResource extends JaxRsResourceBase {
         if (cancelAllSubscriptions) {
             final List<SubscriptionBundle> bundles = subscriptionApi.getSubscriptionBundlesForAccountId(accountId, callContext);
             final Iterable<Subscription> toBeCancelled = bundles.stream()
-                    .map(SubscriptionBundle::getSubscriptions)
-                    .flatMap(Collection::stream)
-                    .filter(input -> input.getLastActiveProductCategory() != ProductCategory.ADD_ON &&
-                                     input.getBillingEndDate() == null)
-                    .collect(Collectors.toUnmodifiableList());
+                                                                .map(SubscriptionBundle::getSubscriptions)
+                                                                .flatMap(Collection::stream)
+                                                                .filter(input -> input.getLastActiveProductCategory() != ProductCategory.ADD_ON &&
+                                                                                 input.getBillingEndDate() == null)
+                                                                .collect(Collectors.toUnmodifiableList());
 
             for (final Subscription cur : toBeCancelled) {
                 cur.cancelEntitlementWithPolicyOverrideBillingPolicy(EntitlementActionPolicy.IMMEDIATE, BillingActionPolicy.END_OF_TERM, Collections.emptyList(), callContext);
             }
         }
 
-        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, null, callContext) : Collections.emptyList();
+        final Collection<Invoice> unpaidInvoices = writeOffUnpaidInvoices || itemAdjustUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(accountId, null, null, callContext)
+            : Collections.emptyList();
         if (writeOffUnpaidInvoices) {
             for (final Invoice cur : unpaidInvoices) {
                 invoiceApi.tagInvoiceAsWrittenOff(cur.getId(), callContext);
@@ -590,7 +533,11 @@ public class AccountResource extends JaxRsResourceBase {
     public Response getAccountTimeline(@PathParam("accountId") final UUID accountId,
                                        @QueryParam(QUERY_PARALLEL) @DefaultValue("false") final Boolean parallel,
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException, PaymentApiException, SubscriptionApiException, InvoiceApiException, CatalogApiException {
+                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException,
+                                                                                                   PaymentApiException,
+                                                                                                   SubscriptionApiException,
+                                                                                                   InvoiceApiException,
+                                                                                                   CatalogApiException {
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
@@ -605,7 +552,7 @@ public class AccountResource extends JaxRsResourceBase {
         final Callable<List<Invoice>> invoicesCallable = new Callable<List<Invoice>>() {
             @Override
             public List<Invoice> call() throws Exception {
-                return invoiceApi.getInvoicesByAccount(accountId, false, false, true, tenantContext); 
+                return invoiceApi.getInvoicesByAccount(accountId, false, false, true, tenantContext);
             }
         };
         final Callable<List<InvoicePayment>> invoicePaymentsCallable = new Callable<List<InvoicePayment>>() {
@@ -670,7 +617,10 @@ public class AccountResource extends JaxRsResourceBase {
         return Response.status(Status.OK).entity(json).build();
     }
 
-    private <T> T waitOnFutureAndHandleTimeout(final String logSuffix, final Future<T> future, final long timeoutMsec, final Iterable<Future> toBeCancelled) throws PaymentApiException, AccountApiException, InvoiceApiException, SubscriptionApiException {
+    private <T> T waitOnFutureAndHandleTimeout(final String logSuffix, final Future<T> future, final long timeoutMsec, final Iterable<Future> toBeCancelled) throws PaymentApiException,
+                                                                                                                                                             AccountApiException,
+                                                                                                                                                             InvoiceApiException,
+                                                                                                                                                             SubscriptionApiException {
         try {
             return waitOnFutureAndHandleTimeout(future, timeoutMsec);
         } catch (final InterruptedException e) {
@@ -705,7 +655,8 @@ public class AccountResource extends JaxRsResourceBase {
         return null;
     }
 
-    private void handleCallableException(final Throwable causeOrException, final Iterable<Future> toBeCancelled) throws AccountApiException, SubscriptionApiException, PaymentApiException, InvoiceApiException {
+    private void handleCallableException(final Throwable causeOrException,
+                                         final Iterable<Future> toBeCancelled) throws AccountApiException, SubscriptionApiException, PaymentApiException, InvoiceApiException {
         for (final Future f : toBeCancelled) {
             f.cancel(true);
         }
@@ -786,9 +737,8 @@ public class AccountResource extends JaxRsResourceBase {
         if (unpaidInvoicesOnly) {
             invoices = new ArrayList<Invoice>(invoiceApi.getUnpaidInvoicesByAccountId(accountId, startDate, endDate, tenantContext));
         } else {
-            invoices = startDate != null || endDate != null ?
-                       invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, includeInvoiceComponents, tenantContext) :
-                       invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, includeInvoiceComponents, tenantContext);
+            invoices = startDate != null || endDate != null ? invoiceApi.getInvoicesByAccount(accountId, startDate, endDate, includeVoidedInvoices, includeInvoiceComponents, tenantContext)
+                : invoiceApi.getInvoicesByAccount(accountId, withMigrationInvoices, includeVoidedInvoices, includeInvoiceComponents, tenantContext);
         }
 
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
@@ -812,10 +762,10 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiResponses(value = {@ApiResponse(code = 400, message = "Invalid account id supplied"),
                            @ApiResponse(code = 404, message = "Account not found")})
     public Response getInvoicesForAccountPaginated(@PathParam("accountId") final UUID accountId,
-                                          @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
-                                          @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
-                                          @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
-                                          @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                                                   @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") final Long offset,
+                                                   @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") final Long limit,
+                                                   @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
 
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
 
@@ -837,8 +787,7 @@ public class AccountResource extends JaxRsResourceBase {
                                                     final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
                                                     return new InvoiceJson(invoice, null, accountAuditLogs);
                                                 },
-                                                nextPageUri
-                                               );
+                                                nextPageUri);
     }
 
     /*
@@ -914,12 +863,9 @@ public class AccountResource extends JaxRsResourceBase {
         LocalDate filterMaxDate = null;
         StringBuilder filterInvoiceIds = null;
         for (final Invoice invoice : unpaidInvoices) {
-            final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ?
-                                           invoice.getBalance() : remainingRequestPayment;
+            final BigDecimal amountToPay = (remainingRequestPayment.compareTo(invoice.getBalance()) >= 0) ? invoice.getBalance() : remainingRequestPayment;
             if (amountToPay.compareTo(BigDecimal.ZERO) > 0) {
-                final UUID paymentMethodId = externalPayment ?
-                                             null :
-                                             (inputPaymentMethodId != null ? inputPaymentMethodId : account.getPaymentMethodId());
+                final UUID paymentMethodId = externalPayment ? null : (inputPaymentMethodId != null ? inputPaymentMethodId : account.getPaymentMethodId());
                 createPurchaseForInvoice(account, invoice.getId(), amountToPay, paymentMethodId, externalPayment, null, null, pluginProperties, callContext);
 
                 if (filterMinDate == null || filterMinDate.isAfter(invoice.getTargetDate())) {
@@ -995,14 +941,21 @@ public class AccountResource extends JaxRsResourceBase {
         final Account account = accountUserApi.getAccountById(data.getAccountId(), callContext);
 
         final boolean hasDefaultPaymentMethod = account.getPaymentMethodId() != null || isDefault;
-        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext) :
-                                                   Collections.<Invoice>emptyList();
+        final Collection<Invoice> unpaidInvoices = payAllUnpaidInvoices ? invoiceApi.getUnpaidInvoicesByAccountId(account.getId(), null, clock.getUTCToday(), callContext)
+            : Collections.<Invoice>emptyList();
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0 && !hasDefaultPaymentMethod) {
             return Response.status(Status.BAD_REQUEST).build();
         }
 
         final PaymentOptions paymentOptions = createControlPluginApiPaymentOptions(paymentControlPluginNames);
-        final UUID paymentMethodId = paymentApi.addPaymentMethodWithPaymentControl(account, data.getExternalKey(), data.getPluginName(), isDefault, data.getPluginDetail(), pluginProperties, paymentOptions, callContext);
+        final UUID paymentMethodId = paymentApi.addPaymentMethodWithPaymentControl(account,
+                                                                                   data.getExternalKey(),
+                                                                                   data.getPluginName(),
+                                                                                   isDefault,
+                                                                                   data.getPluginDetail(),
+                                                                                   pluginProperties,
+                                                                                   paymentOptions,
+                                                                                   callContext);
         if (payAllUnpaidInvoices && unpaidInvoices.size() > 0) {
             for (final Invoice invoice : unpaidInvoices) {
                 createPurchaseForInvoice(account, invoice.getId(), invoice.getBalance(), paymentMethodId, false, null, null, pluginProperties, callContext);
@@ -1031,8 +984,8 @@ public class AccountResource extends JaxRsResourceBase {
         final List<PaymentMethod> methods = paymentApi.getAccountPaymentMethods(account.getId(), includedDeleted, withPluginInfo, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
         final List<PaymentMethodJson> json = methods.stream()
-                .map(input -> PaymentMethodJson.toPaymentMethodJson(account, input, accountAuditLogs))
-                .collect(Collectors.toUnmodifiableList());
+                                                    .map(input -> PaymentMethodJson.toPaymentMethodJson(account, input, accountAuditLogs))
+                                                    .collect(Collectors.toUnmodifiableList());
 
         return Response.status(Status.OK).entity(json).build();
     }
@@ -1118,8 +1071,8 @@ public class AccountResource extends JaxRsResourceBase {
         final List<Payment> payments = paymentApi.getAccountPayments(accountId, withPluginInfo, withAttempts, pluginProperties, tenantContext);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
         final List<PaymentJson> result = payments.stream()
-                .map(payment -> new PaymentJson(payment, accountAuditLogs))
-                .collect(Collectors.toUnmodifiableList());
+                                                 .map(payment -> new PaymentJson(payment, accountAuditLogs))
+                                                 .collect(Collectors.toUnmodifiableList());
 
         return Response.status(Response.Status.OK).entity(result).build();
     }
@@ -1193,8 +1146,10 @@ public class AccountResource extends JaxRsResourceBase {
                                     final CallContext callContext,
                                     final HttpServletRequest request) throws PaymentApiException {
         verifyNonNullOrEmpty(json, "PaymentTransactionJson body should be specified");
-        verifyNonNullOrEmpty(json.getTransactionType(), "PaymentTransactionJson transactionType needs to be set",
-                             json.getAmount(), "PaymentTransactionJson amount needs to be set");
+        verifyNonNullOrEmpty(json.getTransactionType(),
+                             "PaymentTransactionJson transactionType needs to be set",
+                             json.getAmount(),
+                             "PaymentTransactionJson amount needs to be set");
 
         final Iterable<PluginProperty> pluginProperties = extractPluginProperties(pluginPropertiesString);
         final Currency currency = json.getCurrency() == null ? account.getCurrency() : json.getCurrency();
@@ -1228,19 +1183,43 @@ public class AccountResource extends JaxRsResourceBase {
         final Payment result;
         switch (transactionType) {
             case AUTHORIZE:
-                result = paymentApi.createAuthorizationWithPaymentControl(account, paymentMethodId, paymentId, json.getAmount(), currency, json.getEffectiveDate(),
-                                                                          json.getPaymentExternalKey(), json.getTransactionExternalKey(),
-                                                                          pluginProperties, paymentOptions, callContext);
+                result = paymentApi.createAuthorizationWithPaymentControl(account,
+                                                                          paymentMethodId,
+                                                                          paymentId,
+                                                                          json.getAmount(),
+                                                                          currency,
+                                                                          json.getEffectiveDate(),
+                                                                          json.getPaymentExternalKey(),
+                                                                          json.getTransactionExternalKey(),
+                                                                          pluginProperties,
+                                                                          paymentOptions,
+                                                                          callContext);
                 break;
             case PURCHASE:
-                result = paymentApi.createPurchaseWithPaymentControl(account, paymentMethodId, paymentId, json.getAmount(), currency, json.getEffectiveDate(),
-                                                                     json.getPaymentExternalKey(), json.getTransactionExternalKey(),
-                                                                     pluginProperties, paymentOptions, callContext);
+                result = paymentApi.createPurchaseWithPaymentControl(account,
+                                                                     paymentMethodId,
+                                                                     paymentId,
+                                                                     json.getAmount(),
+                                                                     currency,
+                                                                     json.getEffectiveDate(),
+                                                                     json.getPaymentExternalKey(),
+                                                                     json.getTransactionExternalKey(),
+                                                                     pluginProperties,
+                                                                     paymentOptions,
+                                                                     callContext);
                 break;
             case CREDIT:
-                result = paymentApi.createCreditWithPaymentControl(account, paymentMethodId, paymentId, json.getAmount(), currency, json.getEffectiveDate(),
-                                                                   json.getPaymentExternalKey(), json.getTransactionExternalKey(),
-                                                                   pluginProperties, paymentOptions, callContext);
+                result = paymentApi.createCreditWithPaymentControl(account,
+                                                                   paymentMethodId,
+                                                                   paymentId,
+                                                                   json.getAmount(),
+                                                                   currency,
+                                                                   json.getEffectiveDate(),
+                                                                   json.getPaymentExternalKey(),
+                                                                   json.getTransactionExternalKey(),
+                                                                   pluginProperties,
+                                                                   paymentOptions,
+                                                                   callContext);
                 break;
             default:
                 return Response.status(Status.PRECONDITION_FAILED).entity("TransactionType " + transactionType + " is not allowed for an account").build();
@@ -1290,8 +1269,8 @@ public class AccountResource extends JaxRsResourceBase {
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, auditMode.getLevel(), tenantContext);
 
         final List<BlockingStateJson> result = Iterables.toStream(blockingStates)
-                .map(input -> new BlockingStateJson(input, accountAuditLogs))
-                .collect(Collectors.toUnmodifiableList());
+                                                        .map(input -> new BlockingStateJson(input, accountAuditLogs))
+                                                        .collect(Collectors.toUnmodifiableList());
 
         return Response.status(Status.OK).entity(result).build();
     }
@@ -1303,7 +1282,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve blocking state audit logs with history by id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Blocking state  not found")})
     public Response getBlockingStateAuditLogsWithHistory(@PathParam("blockingId") final UUID blockingId,
-                                                  @javax.ws.rs.core.Context final HttpServletRequest request) {
+                                                         @javax.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
         final List<AuditLogWithHistory> auditLogWithHistory = subscriptionApi.getBlockingStateAuditLogsWithHistoryForId(blockingId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
@@ -1359,9 +1338,8 @@ public class AccountResource extends JaxRsResourceBase {
                                        @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                        @javax.ws.rs.core.Context final HttpServletRequest request) {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<CustomField> customFields = objectType != null ?
-                                               customFieldUserApi.getCustomFieldsForAccountType(accountId, objectType, tenantContext) :
-                                               customFieldUserApi.getCustomFieldsForAccount(accountId, tenantContext);
+        final List<CustomField> customFields = objectType != null ? customFieldUserApi.getCustomFieldsForAccountType(accountId, objectType, tenantContext)
+            : customFieldUserApi.getCustomFieldsForAccount(accountId, tenantContext);
         return createCustomFieldResponse(customFields, auditMode, tenantContext);
     }
 
@@ -1380,8 +1358,15 @@ public class AccountResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final HttpServletRequest request,
                                               @javax.ws.rs.core.Context final UriInfo uriInfo) throws CustomFieldApiException {
-        return super.createCustomFields(accountId, customFields, context.createCallContextWithAccountId(accountId, createdBy, reason,
-                                                                                                        comment, request), uriInfo, request);
+        return super.createCustomFields(accountId,
+                                        customFields,
+                                        context.createCallContextWithAccountId(accountId,
+                                                                               createdBy,
+                                                                               reason,
+                                                                               comment,
+                                                                               request),
+                                        uriInfo,
+                                        request);
     }
 
     @TimedResource
@@ -1398,8 +1383,13 @@ public class AccountResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        return super.modifyCustomFields(accountId, customFields, context.createCallContextWithAccountId(accountId, createdBy, reason,
-                                                                                                        comment, request));
+        return super.modifyCustomFields(accountId,
+                                        customFields,
+                                        context.createCallContextWithAccountId(accountId,
+                                                                               createdBy,
+                                                                               reason,
+                                                                               comment,
+                                                                               request));
     }
 
     @TimedResource
@@ -1416,7 +1406,8 @@ public class AccountResource extends JaxRsResourceBase {
                                               @HeaderParam(HDR_REASON) final String reason,
                                               @HeaderParam(HDR_COMMENT) final String comment,
                                               @javax.ws.rs.core.Context final HttpServletRequest request) throws CustomFieldApiException {
-        return super.deleteCustomFields(accountId, customFieldList,
+        return super.deleteCustomFields(accountId,
+                                        customFieldList,
                                         context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request));
     }
 
@@ -1451,9 +1442,8 @@ public class AccountResource extends JaxRsResourceBase {
                                @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
                                @javax.ws.rs.core.Context final HttpServletRequest request) throws TagDefinitionApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
-        final List<Tag> tags = objectType != null ?
-                               tagUserApi.getTagsForAccountType(accountId, objectType, includedDeleted, tenantContext) :
-                               tagUserApi.getTagsForAccount(accountId, includedDeleted, tenantContext);
+        final List<Tag> tags = objectType != null ? tagUserApi.getTagsForAccountType(accountId, objectType, includedDeleted, tenantContext)
+            : tagUserApi.getTagsForAccount(accountId, includedDeleted, tenantContext);
         return createTagResponse(accountId, tags, auditMode, tenantContext);
     }
 
@@ -1472,8 +1462,11 @@ public class AccountResource extends JaxRsResourceBase {
                                       @HeaderParam(HDR_COMMENT) final String comment,
                                       @javax.ws.rs.core.Context final UriInfo uriInfo,
                                       @javax.ws.rs.core.Context final HttpServletRequest request) throws TagApiException {
-        return super.createTags(accountId, tagList, uriInfo,
-                                context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request), request);
+        return super.createTags(accountId,
+                                tagList,
+                                uriInfo,
+                                context.createCallContextWithAccountId(accountId, createdBy, reason, comment, request),
+                                request);
     }
 
     @TimedResource
@@ -1556,9 +1549,11 @@ public class AccountResource extends JaxRsResourceBase {
         accountUserApi.getAccountById(accountId, callContext);
 
         // Make sure the email doesn't exist
-        final AccountEmail existingEmail = accountUserApi.getEmails(accountId, callContext).stream()
-                .filter(input -> input.getEmail().equals(json.getEmail()))
-                .findFirst().orElse(null);
+        final AccountEmail existingEmail = accountUserApi.getEmails(accountId, callContext)
+                                                         .stream()
+                                                         .filter(input -> input.getEmail().equals(json.getEmail()))
+                                                         .findFirst()
+                                                         .orElse(null);
 
         if (existingEmail == null) {
             accountUserApi.addEmail(accountId, json.toAccountEmail(UUIDs.randomUUID()), callContext);
@@ -1671,7 +1666,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve audit logs by account id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountAuditLogs(@PathParam("accountId") final UUID accountId,
-                               @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(accountId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogs(accountAuditLogs)).build();
@@ -1684,7 +1679,7 @@ public class AccountResource extends JaxRsResourceBase {
     @ApiOperation(value = "Retrieve account audit logs with history by account id", response = AuditLogJson.class, responseContainer = "List")
     @ApiResponses(value = {@ApiResponse(code = 404, message = "Account not found")})
     public Response getAccountAuditLogsWithHistory(@PathParam("accountId") final UUID accountId,
-                                        @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+                                                   @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
         final TenantContext tenantContext = context.createTenantContextWithAccountId(accountId, request);
         final List<AuditLogWithHistory> auditLogWithHistory = accountUserApi.getAuditLogsWithHistoryForId(accountId, AuditLevel.FULL, tenantContext);
         return Response.status(Status.OK).entity(getAuditLogsWithHistory(auditLogWithHistory)).build();
@@ -1700,95 +1695,117 @@ public class AccountResource extends JaxRsResourceBase {
 
 
     private InvoiceItem createCreditItem(final UUID accountId, final BigDecimal creditAmount, final Currency currency) {
-        return  new InvoiceItem() {
+        return new InvoiceItem() {
             @Override
             public InvoiceItemType getInvoiceItemType() {
                 return InvoiceItemType.CREDIT_ADJ;
             }
+
             @Override
             public UUID getInvoiceId() {
                 return null;
             }
+
             @Override
             public UUID getAccountId() {
                 return accountId;
             }
+
             @Override
             public UUID getChildAccountId() {
                 return null;
             }
+
             @Override
             public LocalDate getStartDate() {
                 return null;
             }
+
             @Override
             public LocalDate getEndDate() {
                 return null;
             }
+
             @Override
             public BigDecimal getAmount() {
                 return creditAmount;
             }
+
             @Override
             public Currency getCurrency() {
                 return currency;
             }
+
             @Override
             public String getDescription() {
                 return "pay all invoices";
             }
+
             @Override
             public UUID getBundleId() {
                 return null;
             }
+
             @Override
             public UUID getSubscriptionId() {
                 return null;
             }
+
             @Override
             public String getProductName() {
                 return null;
             }
+
             @Override
             public String getPrettyProductName() {
                 return null;
             }
+
             @Override
             public String getPlanName() {
                 return null;
             }
+
             @Override
             public String getPrettyPlanName() {
                 return null;
             }
+
             @Override
             public String getPhaseName() {
                 return null;
             }
+
             @Override
             public String getPrettyPhaseName() {
                 return null;
             }
+
             @Override
             public String getUsageName() {
                 return null;
             }
+
             @Override
             public String getPrettyUsageName() {
                 return null;
             }
+
             @Override
             public BigDecimal getRate() {
                 return null;
             }
+
             @Override
             public UUID getLinkedItemId() {
                 return null;
             }
+
             @Override
             public BigDecimal getQuantity() {
                 return null;
             }
+
             @Override
             public String getItemDetails() {
                 return null;
@@ -1803,14 +1820,17 @@ public class AccountResource extends JaxRsResourceBase {
             public boolean matches(final Object o) {
                 return false;
             }
+
             @Override
             public UUID getId() {
                 return null;
             }
+
             @Override
             public DateTime getCreatedDate() {
                 return null;
             }
+
             @Override
             public DateTime getUpdatedDate() {
                 return null;
@@ -1818,5 +1838,117 @@ public class AccountResource extends JaxRsResourceBase {
         };
     }
 
+
+    // @TimedResource
+    // @GET
+    // @Path("/search/advanced")
+    // @Produces(APPLICATION_JSON)
+    // @ApiOperation(value = "Advanced search for accounts by tags and other criteria", response = AccountJson.class, responseContainer = "List")
+    // public Response searchAccountsAdvanced(
+    //     @QueryParam("tag") String tag,
+    //     @QueryParam("currency") String currency,
+    //     @QueryParam("country") String country,
+    //     @QueryParam("city") String city,
+    //     @QueryParam("state") String state,
+    //     @QueryParam("offset") @DefaultValue("0") Long offset,
+    //     @QueryParam("limit") @DefaultValue("100") Long limit,
+    //     @javax.ws.rs.core.Context HttpServletRequest request) {
+    //     final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+    //     final Pagination < Account > accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
+
+    //     List < AccountJson > result = new ArrayList < > ();
+
+    //     for (Account account: accounts) {
+    //         boolean matches = true;
+
+    //         if (currency != null && !currency.isEmpty()) {
+    //             matches &= currency.equalsIgnoreCase(account.getCurrency() != null ? account.getCurrency().name() : null);
+    //         }
+
+    //         if (country != null && !country.isEmpty()) {
+    //             matches &= country.equalsIgnoreCase(account.getCountry());
+    //         }
+
+    //         if (city != null && !city.isEmpty()) {
+    //             matches &= city.equalsIgnoreCase(account.getCity());
+    //         }
+
+    //         if (state != null && !state.isEmpty()) {
+    //             matches &= state.equalsIgnoreCase(account.getStateOrProvince());
+    //         }
+
+    //         if (tag != null && !tag.isEmpty()) {
+    //             List < Tag > accountTags = tagUserApi.getTagsForAccount(account.getId(), false, tenantContext);
+
+    //             if (accountTags == null) {
+    //                 accountTags = Collections.emptyList();
+    //             }
+
+    //             boolean hasTag = accountTags.stream().anyMatch(t -> {
+    //                 try {
+    //                     TagDefinition def = tagUserApi.getTagDefinition(t.getTagDefinitionId(), tenantContext);
+    //                     return def != null && def.getName().equalsIgnoreCase(tag);
+    //                 } catch (Exception e) {
+    //                     log.warn("Could not fetch tag definition for ", t, e);
+    //                     return false;
+    //                 }
+    //             });
+
+    //             matches &= hasTag;
+    //         }
+
+    //         if (matches) {
+    //             result.add(new AccountJson(account, invoiceApi.getAccountBalance(account.getId(), tenantContext), null, null));
+    //         }
+    //     }
+
+    //     return Response.status(Response.Status.OK).entity(result).build();
+    // }
+
+    @TimedResource
+    @GET
+    @Path("/search/advanced")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Advanced search for accounts by tags and other criteria", response = AccountJson.class, responseContainer = "List")
+    public Response searchAccountsAdvanced(
+                                           @QueryParam("tag") String tag,
+                                           @QueryParam("currency") String currency,
+                                           @QueryParam("country") String country,
+                                           @QueryParam("city") String city,
+                                           @QueryParam("state") String state,
+                                           @QueryParam(QUERY_SEARCH_OFFSET) @DefaultValue("0") Long offset,
+                                           @QueryParam(QUERY_SEARCH_LIMIT) @DefaultValue("100") Long limit,
+                                           @QueryParam(QUERY_ACCOUNT_WITH_BALANCE) @DefaultValue("false") final Boolean accountWithBalance,
+                                           @QueryParam(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA) @DefaultValue("false") final Boolean accountWithBalanceAndCBA,
+                                           @QueryParam(QUERY_AUDIT) @DefaultValue("NONE") final AuditMode auditMode,
+                                           @javax.ws.rs.core.Context final HttpServletRequest request) throws AccountApiException {
+
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Pagination<Account> accounts = accountUserApi.searchAccountsAdvanced(tag, currency, country, city, state, offset, limit, tenantContext);
+
+     Map<String, String> queryParams = new java.util.HashMap<>();
+     queryParams.put(QUERY_ACCOUNT_WITH_BALANCE, accountWithBalance.toString());
+     queryParams.put(QUERY_ACCOUNT_WITH_BALANCE_AND_CBA, accountWithBalanceAndCBA.toString());
+     queryParams.put(QUERY_AUDIT, auditMode.getLevel().toString());
+     if (tag != null) queryParams.put("tag", tag);
+     if (currency != null) queryParams.put("currency", currency);
+     if (country != null) queryParams.put("country", country);
+     if (city != null) queryParams.put("city", city);
+     if (state != null) queryParams.put("state", state);
+
+     final URI nextPageUri = uriBuilder.nextPage(AccountResource.class,
+                               "searchAccountsAdvanced",
+                               accounts.getNextOffset(),
+                               limit,
+                               queryParams,
+                               Collections.emptyMap());
+
+        return buildStreamingPaginationResponse(accounts,
+                                                account -> {
+                                                    final AccountAuditLogs accountAuditLogs = auditUserApi.getAccountAuditLogs(account.getId(), auditMode.getLevel(), tenantContext);
+                                                    return getAccount(account, accountWithBalance, accountWithBalanceAndCBA, accountAuditLogs, tenantContext);
+                                                },
+                                                nextPageUri);
+    }
 
 }

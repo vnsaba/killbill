@@ -5,13 +5,13 @@
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
+ * License. You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
@@ -29,9 +29,11 @@ import org.killbill.billing.util.entity.dao.Audited;
 import org.killbill.billing.util.entity.dao.EntitySqlDao;
 import org.killbill.commons.jdbi.template.KillBillSqlDaoStringTemplate;
 import org.skife.jdbi.v2.sqlobject.Bind;
+import org.skife.jdbi.v2.sqlobject.BindBean;
 import org.killbill.commons.jdbi.binder.SmartBindBean;
 import org.skife.jdbi.v2.sqlobject.SqlQuery;
 import org.skife.jdbi.v2.sqlobject.SqlUpdate;
+import org.skife.jdbi.v2.sqlobject.customizers.Define;
 
 @KillBillSqlDaoStringTemplate
 public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
@@ -66,5 +68,13 @@ public interface AccountSqlDao extends EntitySqlDao<AccountModelDao, Account> {
     @SqlQuery
     public AccountModelDao luckySearch(@Bind("searchKey") final String searchKey,
                                        @SmartBindBean final InternalTenantContext context);
+
+    @SqlQuery
+    public List<AccountModelDao> searchAccountsAdvanced(@Bind("offset") int offset,
+                                                        @Bind("limit") int limit,
+                                                        @Bind("ordering") String ordering,
+                                                        @BindBean("context") InternalTenantContext context,
+                                                        @Define("filters") String filters);
+
 
 }

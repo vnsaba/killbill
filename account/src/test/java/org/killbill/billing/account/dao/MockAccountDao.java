@@ -191,4 +191,10 @@ public class MockAccountDao extends MockEntityDaoBase<AccountModelDao, Account, 
     public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final InternalTenantContext context) throws AccountApiException {
         throw new UnsupportedOperationException();
     }
+
+    @Override
+    public Pagination<AccountModelDao> searchAccountsAdvanced(String tag, String currency, String country, String city, String state, Long offset, Long limit, InternalTenantContext context) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'searchAccountsAdvanced'");
+    }
 }

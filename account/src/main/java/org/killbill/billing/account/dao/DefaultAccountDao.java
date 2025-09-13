@@ -6,13 +6,13 @@
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
+ * License. You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
@@ -94,7 +94,10 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                              final InternalCallContextFactory internalCallContextFactory,
                              final NonEntityDao nonEntityDao,
                              final AuditDao auditDao) {
-        super(nonEntityDao, cacheControllerDispatcher, new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory), AccountSqlDao.class);
+        super(nonEntityDao,
+              cacheControllerDispatcher,
+              new EntitySqlDaoTransactionalJdbiWrapper(dbi, roDbi, clock, cacheControllerDispatcher, nonEntityDao, internalCallContextFactory),
+              AccountSqlDao.class);
         this.accountImmutableCacheController = cacheControllerDispatcher.getCacheController(CacheType.ACCOUNT_IMMUTABLE);
         this.eventBus = eventBus;
         this.internalCallContextFactory = internalCallContextFactory;
@@ -125,8 +128,11 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
     }
 
     @Override
-    protected void postBusEventFromTransaction(final AccountModelDao account, final AccountModelDao savedAccount, final ChangeType changeType,
-                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory, final InternalCallContext context) throws BillingExceptionBase {
+    protected void postBusEventFromTransaction(final AccountModelDao account,
+                                               final AccountModelDao savedAccount,
+                                               final ChangeType changeType,
+                                               final EntitySqlDaoWrapperFactory entitySqlDaoWrapperFactory,
+                                               final InternalCallContext context) throws BillingExceptionBase {
         // This is only called for the create call (see update below)
         switch (changeType) {
             case INSERT:
@@ -152,8 +158,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public AccountModelDao getAccountByKey(final String key, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
-                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountByKey(key, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountByKey(key, context));
     }
 
     @Override
@@ -162,8 +167,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
         if (userIsFeelingLucky) {
             // The use-case we can optimize is when the user is looking for an exact match (e.g. he knows the full email). In that case, we can speed up the queries
             // by doing exact searches only.
-            final AccountModelDao accountModelDao = transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
-                    entitySqlDaoWrapperFactory.become(AccountSqlDao.class).luckySearch(searchKey, context));
+            final AccountModelDao accountModelDao = transactionalSqlDao.execute(true,
+                                                                                entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory.become(AccountSqlDao.class).luckySearch(searchKey, context));
 
             return new DefaultPagination<AccountModelDao>(0L,
                                                           1L,
@@ -202,10 +207,14 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                                  "created_date",
                                                  "updated_by",
                                                  "updated_date"),
-                                          Map.of("billing_cycle_day_local", Integer.class,
-                                                 "first_name_length", Integer.class,
-                                                 "is_payment_delegated_to_parent", Boolean.class,
-                                                 "migrated", Boolean.class));
+                                          Map.of("billing_cycle_day_local",
+                                                 Integer.class,
+                                                 "first_name_length",
+                                                 Integer.class,
+                                                 "is_payment_delegated_to_parent",
+                                                 Boolean.class,
+                                                 "migrated",
+                                                 Boolean.class));
         } else {
             searchQuery = new SearchQuery(SqlOperator.OR);
 
@@ -223,12 +232,25 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
                                               new PaginationIteratorBuilder<AccountModelDao, Account, AccountSqlDao>() {
                                                   @Override
                                                   public Long getCount(final AccountSqlDao accountSqlDao, final InternalTenantContext context) {
-                                                      return accountSqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), context);
+                                                      return accountSqlDao.getSearchCount(searchQuery.getSearchKeysBindMap(),
+                                                                                          searchQuery.getSearchAttributes(),
+                                                                                          searchQuery.getLogicalOperator(),
+                                                                                          context);
                                                   }
 
                                                   @Override
-                                                  public Iterator<AccountModelDao> build(final AccountSqlDao accountSqlDao, final Long offset, final Long limit, final Ordering ordering, final InternalTenantContext context) {
-                                                      return accountSqlDao.search(searchQuery.getSearchKeysBindMap(), searchQuery.getSearchAttributes(), searchQuery.getLogicalOperator(), offset, limit, ordering.toString(), context);
+                                                  public Iterator<AccountModelDao> build(final AccountSqlDao accountSqlDao,
+                                                                                         final Long offset,
+                                                                                         final Long limit,
+                                                                                         final Ordering ordering,
+                                                                                         final InternalTenantContext context) {
+                                                      return accountSqlDao.search(searchQuery.getSearchKeysBindMap(),
+                                                                                  searchQuery.getSearchAttributes(),
+                                                                                  searchQuery.getLogicalOperator(),
+                                                                                  offset,
+                                                                                  limit,
+                                                                                  ordering.toString(),
+                                                                                  context);
                                                   }
                                               },
                                               offset,
@@ -242,8 +264,7 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             throw new AccountApiException(ErrorCode.ACCOUNT_CANNOT_MAP_NULL_KEY, "");
         }
 
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
-                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getIdFromKey(externalKey, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getIdFromKey(externalKey, context));
     }
 
     @Override
@@ -261,7 +282,8 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
             if (!treatNullValueAsReset) {
                 if ((currentAccount.getBillingCycleDayLocal() == DEFAULT_BILLING_CYCLE_DAY_LOCAL && // There is *not* already a BCD set
-                     specifiedAccount.getBillingCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL) || // and the proposed date is not 0
+                     specifiedAccount.getBillingCycleDayLocal() != DEFAULT_BILLING_CYCLE_DAY_LOCAL)
+                    || // and the proposed date is not 0
                     killbillFeatures.allowAccountBCDUpdate()) {
                     // Use the specified BCD
                 } else {
@@ -311,7 +333,9 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             final String thePaymentMethodId = paymentMethodId != null ? paymentMethodId.toString() : null;
             final AccountModelDao account = (AccountModelDao) transactional.updatePaymentMethod(accountId.toString(), thePaymentMethodId, context);
 
-            final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId, currentAccount, account,
+            final AccountChangeInternalEvent changeEvent = new DefaultAccountChangeEvent(accountId,
+                                                                                         currentAccount,
+                                                                                         account,
                                                                                          context.getAccountRecordId(),
                                                                                          context.getTenantRecordId(),
                                                                                          context.getUserToken(),
@@ -350,20 +374,17 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
 
     @Override
     public List<AccountEmailModelDao> getEmailsByAccountId(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
-                entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class).getEmailByAccountId(accountId, context));
     }
 
     @Override
     public Integer getAccountBCD(final UUID accountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
-                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getBCD(accountId.toString(), context));
     }
 
     @Override
     public List<AccountModelDao> getAccountsByParentId(final UUID parentAccountId, final InternalTenantContext context) {
-        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory ->
-                entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context));
+        return transactionalSqlDao.execute(true, entitySqlDaoWrapperFactory -> entitySqlDaoWrapperFactory.become(AccountSqlDao.class).getAccountsByParentId(parentAccountId, context));
     }
 
     @Override
@@ -380,5 +401,93 @@ public class DefaultAccountDao extends EntityDaoBase<AccountModelDao, Account, A
             final AccountEmailSqlDao transactional = entitySqlDaoWrapperFactory.become(AccountEmailSqlDao.class);
             return auditDao.getAuditLogsWithHistoryForId(transactional, TableName.ACCOUNT_EMAIL, accountEmailId, auditLevel, context);
         });
+    }
+
+    @Override
+    public Pagination<AccountModelDao> searchAccountsAdvanced(
+                                                              String tag,
+                                                              String currency,
+                                                              String country,
+                                                              String city,
+                                                              String state,
+                                                              Long offset,
+                                                              Long limit,
+                                                              InternalTenantContext context) {
+
+        if (offset == null) {
+            log.warn("searchAccountsAdvanced: offset is null, defaulting to 0");
+            offset = 0L;
+        }
+        if (limit == null) {
+            log.warn("searchAccountsAdvanced: limit is null, defaulting to 100");
+            limit = 100L;
+        }
+        if (context == null) {
+            log.error("searchAccountsAdvanced: context is null!");
+            throw new IllegalArgumentException("InternalTenantContext cannot be null");
+        }
+        if (currency == null) log.info("searchAccountsAdvanced: currency is null");
+        if (country == null) log.info("searchAccountsAdvanced: country is null");
+        if (city == null) log.info("searchAccountsAdvanced: city is null");
+        if (state == null) log.info("searchAccountsAdvanced: state is null");
+        if (tag == null) log.info("searchAccountsAdvanced: tag is null");
+
+        SearchQuery searchQuery = new SearchQuery(SqlOperator.AND);
+
+        if (currency != null && !currency.isEmpty()) {
+            searchQuery.addSearchClause("currency", SqlOperator.EQ, currency);
+        }
+        if (country != null && !country.isEmpty()) {
+            searchQuery.addSearchClause("country", SqlOperator.EQ, country);
+        }
+        if (city != null && !city.isEmpty()) {
+            searchQuery.addSearchClause("city", SqlOperator.EQ, city);
+        }
+        if (state != null && !state.isEmpty()) {
+            searchQuery.addSearchClause("state", SqlOperator.EQ, state);
+        }
+
+        Pagination<AccountModelDao> basePagination = paginationHelper.getPagination(
+                AccountSqlDao.class,
+                new PaginationIteratorBuilder<AccountModelDao, Account, AccountSqlDao>() {
+                    @Override
+                    public Long getCount(AccountSqlDao accountSqlDao, InternalTenantContext context) {
+                        return accountSqlDao.getSearchCount(
+                                searchQuery.getSearchKeysBindMap(),
+                                searchQuery.getSearchAttributes(),
+                                searchQuery.getLogicalOperator(),
+                                context);
+                    }
+
+                    @Override
+                    public Iterator<AccountModelDao> build(AccountSqlDao accountSqlDao,
+                                                           Long offset,
+                                                           Long limit,
+                                                           Ordering ordering,
+                                                           InternalTenantContext context) {
+                        return accountSqlDao.search(
+                                searchQuery.getSearchKeysBindMap(),
+                                searchQuery.getSearchAttributes(),
+                                searchQuery.getLogicalOperator(),
+                                offset,
+                                limit,
+                                ordering.toString(),
+                                context);
+                    }
+                },
+                offset,
+                limit,
+                context);
+
+        
+
+        return basePagination;
+    }
+
+
+    // Método auxiliar para filtrar por tag (ejemplo)
+    private List<AccountModelDao> filterAccountsByTag(List<AccountModelDao> accounts, String tag, InternalTenantContext context) {
+        // ... lógica para filtrar por tag ...
+        return accounts; // Filtrados
     }
 }

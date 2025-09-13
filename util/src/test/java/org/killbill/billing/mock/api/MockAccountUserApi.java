@@ -3,13 +3,13 @@
  *
  * Ning licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
+ * License. You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
@@ -62,24 +62,25 @@ public class MockAccountUserApi implements AccountUserApi {
                                            final String phone,
                                            final String notes) {
         final Account result = new MockAccountBuilder(id)
-                .externalKey(externalKey)
-                .email(email)
-                .name(name).firstNameLength(firstNameLength)
-                .currency(currency)
-                .billingCycleDayLocal(billCycleDayLocal)
-                .paymentMethodId(paymentMethodId)
-                .timeZone(timeZone)
-                .locale(locale)
-                .address1(address1)
-                .address2(address2)
-                .companyName(companyName)
-                .city(city)
-                .stateOrProvince(stateOrProvince)
-                .country(country)
-                .postalCode(postalCode)
-                .phone(phone)
-                .notes(notes)
-                .build();
+                                                         .externalKey(externalKey)
+                                                         .email(email)
+                                                         .name(name)
+                                                         .firstNameLength(firstNameLength)
+                                                         .currency(currency)
+                                                         .billingCycleDayLocal(billCycleDayLocal)
+                                                         .paymentMethodId(paymentMethodId)
+                                                         .timeZone(timeZone)
+                                                         .locale(locale)
+                                                         .address1(address1)
+                                                         .address2(address2)
+                                                         .companyName(companyName)
+                                                         .city(city)
+                                                         .stateOrProvince(stateOrProvince)
+                                                         .country(country)
+                                                         .postalCode(postalCode)
+                                                         .phone(phone)
+                                                         .notes(notes)
+                                                         .build();
         accounts.add(result);
         return result;
     }
@@ -116,8 +117,10 @@ public class MockAccountUserApi implements AccountUserApi {
         final List<Account> results = new LinkedList<Account>();
         for (final Account account : accounts) {
             if ((account.getName() != null && account.getName().contains(searchKey)) ||
-                (account.getEmail() != null && account.getEmail().contains(searchKey)) ||
-                (account.getExternalKey() != null && account.getExternalKey().contains(searchKey)) ||
+                (account.getEmail() != null && account.getEmail().contains(searchKey))
+                ||
+                (account.getExternalKey() != null && account.getExternalKey().contains(searchKey))
+                ||
                 (account.getCompanyName() != null && account.getCompanyName().contains(searchKey))) {
                 results.add(account);
             }
@@ -174,13 +177,13 @@ public class MockAccountUserApi implements AccountUserApi {
 
     @Override
     public void updateAccount(final String key, final AccountData accountData, final CallContext context)
-            throws AccountApiException {
+                                                                                                          throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 
     @Override
     public void updateAccount(final UUID accountId, final AccountData accountData, final CallContext context)
-            throws AccountApiException {
+                                                                                                              throws AccountApiException {
         throw new UnsupportedOperationException();
     }
 
@@ -197,5 +200,18 @@ public class MockAccountUserApi implements AccountUserApi {
     @Override
     public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
         throw new UnsupportedOperationException();
+    }
+
+    @Override
+    public Pagination<Account> searchAccountsAdvanced(String tag,
+                                                      String currency,
+                                                      String country,
+                                                      String city,
+                                                      String state,
+                                                      Long offset,
+                                                      Long limit,
+                                                      TenantContext context) throws AccountApiException {
+        // Retorna un mock vacío para pruebas
+        return DefaultPagination.<Account>build(offset, limit, 0, new LinkedList<Account>());
     }
 }

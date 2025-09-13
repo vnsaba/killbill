@@ -5,13 +5,13 @@
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
+ * License. You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
@@ -117,8 +117,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                       return accountDao.searchAccounts(searchKey, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              DefaultAccount::new
-                                             );
+                                              DefaultAccount::new);
     }
 
     @Override
@@ -130,8 +129,7 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
                                                       return accountDao.get(offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
                                                   }
                                               },
-                                              DefaultAccount::new
-                                             );
+                                              DefaultAccount::new);
     }
 
     @Override
@@ -202,5 +200,18 @@ public class DefaultAccountUserApi extends DefaultAccountApiBase implements Acco
     @Override
     public List<AuditLogWithHistory> getEmailAuditLogsWithHistoryForId(final UUID accountEmailId, final AuditLevel auditLevel, final TenantContext tenantContext) throws AccountApiException {
         return accountDao.getEmailAuditLogsWithHistoryForId(accountEmailId, auditLevel, internalCallContextFactory.createInternalTenantContext(tenantContext.getAccountId(), tenantContext));
+    }
+
+    @Override
+    public Pagination<Account> searchAccountsAdvanced(final String tag, final String currency,final String country,
+              final String city,final String state,final Long offset, final Long limit,final TenantContext context) {
+        return getEntityPaginationNoException(limit,
+            new SourcePaginationBuilder<AccountModelDao, AccountApiException>() {
+                @Override
+                public Pagination<AccountModelDao> build() {
+                    return accountDao.searchAccountsAdvanced(tag, currency, country, city, state, offset, limit, internalCallContextFactory.createInternalTenantContextWithoutAccountRecordId(context));
+                }
+            },
+            DefaultAccount::new);
     }
 }

@@ -187,3 +187,13 @@ getAccountsByParentId() ::= <<
     <defaultOrderBy("")>
     ;
 >>
+
+searchAccountsAdvanced(offset, limit, ordering, context) ::= <<
+SELECT *
+FROM accounts
+WHERE 1=1
+<filters>
+<AND_CHECK_TENANT("")>
+ORDER BY id <ordering>
+LIMIT :limit OFFSET :offset
+>>

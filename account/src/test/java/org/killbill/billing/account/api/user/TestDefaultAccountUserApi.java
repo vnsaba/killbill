@@ -6,13 +6,13 @@
  *
  * The Billing Project licenses this file to you under the Apache License, version 2.0
  * (the "License"); you may not use this file except in compliance with the
- * License.  You may obtain a copy of the License at:
+ * License. You may obtain a copy of the License at:
  *
- *    http://www.apache.org/licenses/LICENSE-2.0
+ * http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.  See the
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
  * License for the specific language governing permissions and limitations
  * under the License.
  */
@@ -181,9 +181,28 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final Account account = createAccount(new DefaultAccount(createTestAccount()));
 
         // Update the address and leave other fields null
-        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null, null, null, 0, null, null, false, 0, null,
-                                                                                    clock.getUTCNow(), null, null, null, null, null, null,
-                                                                                    null, null, null, null, null, false);
+        final MutableAccountData mutableAccountData = new DefaultMutableAccountData(null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    0,
+                                                                                    null,
+                                                                                    null,
+                                                                                    false,
+                                                                                    0,
+                                                                                    null,
+                                                                                    clock.getUTCNow(),
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    null,
+                                                                                    false);
         final String newAddress1 = UUID.randomUUID().toString();
         mutableAccountData.setAddress1(newAddress1);
 
@@ -355,7 +374,6 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
 
 
 
-
     private static final class AccountEventHandler {
 
         private final List<AccountCreationInternalEvent> accountCreationInternalEvents = new LinkedList<>();
@@ -390,8 +408,10 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         Assert.assertEquals(retrievedChildAccount.isPaymentDelegatedToParent(), childAccount.isPaymentDelegatedToParent());
     }
 
-    @Test(groups = "slow", description = "Test Account create Child with a non existing Parent",
-            expectedExceptions = AccountApiException.class, expectedExceptionsMessageRegExp = "Account does not exist for id .*")
+    @Test(groups = "slow",
+          description = "Test Account create Child with a non existing Parent",
+          expectedExceptions = AccountApiException.class,
+          expectedExceptionsMessageRegExp = "Account does not exist for id .*")
     public void testCreateChildAccountWithInvalidParent() throws Exception {
         final AccountModelDao childAccountModel = createTestAccount();
         childAccountModel.setParentAccountId(UUID.randomUUID());
@@ -494,10 +514,55 @@ public class TestDefaultAccountUserApi extends AccountTestSuiteWithEmbeddedDB {
         final TenantSqlDao tenantSqlDao = dbi.onDemand(TenantSqlDao.class);
         final TenantModelDao tenant2 = new TenantModelDao();
         tenantSqlDao.create(tenant2, internalCallContext);
-        final CallContext callContext2 = new DefaultCallContext(account1.getId(), tenant2.getId(), callContext.getUserName(), callContext.getCallOrigin(), callContext.getUserType(), callContext.getUserToken(), clock);
+        final CallContext callContext2 = new DefaultCallContext(account1.getId(),
+                                                                tenant2.getId(),
+                                                                callContext.getUserName(),
+                                                                callContext.getCallOrigin(),
+                                                                callContext.getUserType(),
+                                                                callContext.getUserToken(),
+                                                                clock);
         final Account account2 = accountUserApi.createAccount(accountData, callContext2);
 
         Assert.assertEquals(account1.getExternalKey(), account2.getExternalKey());
         Assert.assertNotEquals(account1.getId(), account2.getId());
+    }
+
+    @Test(groups = "slow", description = "Test advanced account search")
+    public void testSearchAccountsAdvanced() throws Exception {
+        // Crear cuentas de prueba
+        MutableAccountData mutableAccountData1 = createAccountData();
+        mutableAccountData1.setEmail("john@acme.com");
+        mutableAccountData1.setCompanyName("Acme, Inc.");
+        mutableAccountData1.setCountry("US");
+        mutableAccountData1.setCity("New York");
+        mutableAccountData1.setStateOrProvince("NY");
+        AccountModelDao account1ModelDao = new AccountModelDao(UUID.randomUUID(), mutableAccountData1);
+        AccountData accountData1 = new DefaultAccount(account1ModelDao);
+        accountUserApi.createAccount(accountData1, callContext);
+
+        MutableAccountData mutableAccountData2 = createAccountData();
+        mutableAccountData2.setEmail("bob@gmail.com");
+        mutableAccountData2.setCompanyName("Acme, Inc.");
+        mutableAccountData2.setCountry("US");
+        mutableAccountData2.setCity("Boston");
+        mutableAccountData2.setStateOrProvince("MA");
+        AccountModelDao account2ModelDao = new AccountModelDao(UUID.randomUUID(), mutableAccountData2);
+        AccountData accountData2 = new DefaultAccount(account2ModelDao);
+        accountUserApi.createAccount(accountData2, callContext);
+
+        // Buscar por ciudad y estado
+        Pagination<Account> search = accountUserApi.searchAccountsAdvanced(
+                                                                           null, // tag
+                                                                           null, // currency
+                                                                           "US", // country
+                                                                           "New York", // city
+                                                                           "NY", // state
+                                                                           0L,
+                                                                           5L,
+                                                                           callContext);
+
+        Assert.assertEquals(search.getTotalNbRecords(), (Long) 1L);
+        List<Account> results = Iterables.toUnmodifiableList(search);
+        Assert.assertEquals(results.get(0).getEmail(), "john@acme.com");
     }
 }
