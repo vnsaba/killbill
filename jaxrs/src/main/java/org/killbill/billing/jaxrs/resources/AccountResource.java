@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -135,11 +136,14 @@ import org.killbill.billing.util.customfield.CustomField;
 import org.killbill.billing.util.entity.Pagination;
 import org.killbill.billing.util.tag.ControlTagType;
 import org.killbill.billing.util.tag.Tag;
+import org.killbill.billing.util.tag.TagDefinition;
 import org.killbill.clock.Clock;
 import org.killbill.commons.metrics.api.annotation.MetricTag;
 import org.killbill.commons.metrics.api.annotation.TimedResource;
 import org.killbill.notificationq.api.NotificationQueue;
 import org.killbill.notificationq.api.NotificationQueueService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -164,6 +168,8 @@ public class AccountResource extends JaxRsResourceBase {
     private final JaxrsConfig jaxrsConfig;
     private final RecordIdApi recordIdApi;
     private final NotificationQueueService notificationQueueService;
+
+    private final static Logger log = LoggerFactory.getLogger(AccountResource.class);
 
     @Inject
     public AccountResource(final JaxrsUriBuilder uriBuilder,
@@ -273,6 +279,73 @@ public class AccountResource extends JaxRsResourceBase {
                                                 },
                                                 nextPageUri
                                                );
+    }
+
+
+    @TimedResource
+    @GET
+    @Path("/search/advanced")
+    @Produces(APPLICATION_JSON)
+    @ApiOperation(value = "Advanced search for accounts by tags and other criteria", response = AccountJson.class, responseContainer = "List")
+    public Response searchAccountsAdvanced(
+        @QueryParam("tag") String tag,
+        @QueryParam("currency") String currency,
+        @QueryParam("country") String country,
+        @QueryParam("city") String city,
+        @QueryParam("state") String state,
+        @QueryParam("offset") @DefaultValue("0") Long offset,
+        @QueryParam("limit") @DefaultValue("100") Long limit,
+        @javax.ws.rs.core.Context HttpServletRequest request) {
+        final TenantContext tenantContext = context.createTenantContextNoAccountId(request);
+        final Pagination < Account > accounts = accountUserApi.getAccounts(offset, limit, tenantContext);
+
+        List < AccountJson > result = new ArrayList < > ();
+
+        for (Account account: accounts) {
+            boolean matches = true;
+
+            if (currency != null && !currency.isEmpty()) {
+                matches &= currency.equalsIgnoreCase(account.getCurrency() != null ? account.getCurrency().name() : null);
+            }
+            
+            if (country != null && !country.isEmpty()) {
+                matches &= country.equalsIgnoreCase(account.getCountry());
+            }
+
+            if (city != null && !city.isEmpty()) {
+                matches &= city.equalsIgnoreCase(account.getCity());
+            }
+
+            if (state != null && !state.isEmpty()) {
+                matches &= state.equalsIgnoreCase(account.getStateOrProvince());
+            }
+
+            if (tag != null && !tag.isEmpty()) {
+                List < Tag > accountTags = tagUserApi.getTagsForAccount(account.getId(), false, tenantContext);
+
+                if (accountTags == null) {
+                    accountTags = Collections.emptyList();
+                }
+
+                boolean hasTag = accountTags.stream().anyMatch(t -> {
+                    try {
+                        TagDefinition def = tagUserApi.getTagDefinition(t.getTagDefinitionId(), tenantContext);
+                        return def != null && def.getName().equalsIgnoreCase(tag);
+                    } catch (Exception e) {
+                        log.warn("Could not fetch tag definition for ", t, e);
+                        return false;
+                    }
+                });
+
+                matches &= hasTag;
+            }
+
+            if (matches) {
+                result.add(new AccountJson(account, invoiceApi.getAccountBalance(account.getId(), tenantContext), null, null));
+            }
+        }
+
+        return Response.status(Response.Status.OK).entity(result).build();
     }
 
     @TimedResource
